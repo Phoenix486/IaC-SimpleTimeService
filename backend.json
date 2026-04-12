@@ -1,0 +1,7 @@
+{
+    "subscription_id": "66e1fc04-0db9-437d-9833-2a35f1098fa2",
+    "resource_group_name": "rg-az-avm-state",
+    "storage_account_name": "stazavmstate",
+    "container_name": "tfstate-container-prod",
+    "key": "terraform.tfstate"
+}
