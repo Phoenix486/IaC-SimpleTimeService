@@ -28,18 +28,14 @@ jobs:
         uses: hashicorp/setup-terraform@v2.0.3
 
       - name: Terraform Init
-        id: init
         run: terraform init -backend=false
 
       # Run a terraform fmt to check syntax
-      - name: Terraform Format
-        id: fmt
+      - name: Terraform Format Check
         run: terraform fmt -check -recursive
 
       # Run a terraform validate
       - name: Terraform Validate
-        id: validate
-        # Run even if formatting fails
         if: success() || failure()
         run: terraform validate -no-color
 
