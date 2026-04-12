@@ -22,7 +22,7 @@ jobs:
     steps:
       # Checkout the repository to the GitHub Actions runner
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@4.1.5
 
       - name: HashiCorp - Setup Terraform
         uses: hashicorp/setup-terraform@v2.0.3
@@ -41,14 +41,14 @@ jobs:
 
       # Run kics scan
       - name: KICS Github Action
-        uses: Checkmarx/kics-github-action@v2.1.20
+        uses: Checkmarx/kics-github-action@v2.0.0
         with:
           path: .
-          output_formats: json,sarif
+          output: 'json,sarif'
           platform_type: terraform
-          output_path: results-dir
+          output-path: results-dir
           ignore_on_exit: results
-          exclude_paths: .terraform
-          token: ${{ secrets.GITHUB_TOKEN }}
+          log-level: info
+          token: ${{ secrets.IAC_PAT_SECRET }}
           enable_comments: true
           enable_annotations: true
