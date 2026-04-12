@@ -39,16 +39,11 @@ jobs:
         if: success() || failure()
         run: terraform validate -no-color
 
-      # Run kics scan
-      - name: KICS Github Action
-        uses: Checkmarx/kics-github-action@v2.1.20
+      # Run tfsec scan
+      - name: tfsec action
+        uses: aquasecurity/tfsec-action@v1.0.3
         with:
-          path: .
-          output_formats: json,sarif
-          platform_type: terraform
-          output_path: results-dir
-          ignore_on_exit: results
-          verbose: true
-          token: ${{ secrets.IAC_PAT_SECRET }}
-          enable_comments: true
-          enable_annotations: true
+          working_directory: .
+          format: sarif
+          soft_fail: false
+          github_token: ${{ secrets.IAC_PAT_SECRET }}
