@@ -41,13 +41,14 @@ jobs:
 
       # Run kics scan
       - name: KICS Github Action
-        uses: Checkmarx/kics-github-action@d1b692d84c536f4e8696954ce7aab6818f95f5bc
+        uses: Checkmarx/kics-github-action@v2.1.20
         with:
           path: .
-          output: 'json,sarif'
+          output_formats: json,sarif
           platform_type: terraform
-          output-path: results-dir
+          output_path: results-dir
           ignore_on_exit: results
-          log-level: info
+          verbose: true
           token: ${{ secrets.IAC_PAT_SECRET }}
           enable_comments: true
+          enable_annotations: true
