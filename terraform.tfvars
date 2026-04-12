@@ -1,8 +1,8 @@
-subscription_id  = "a7966b6a-d07a-49c2-849d-ff6d09986924"
+subscription_id  = "66e1fc04-0db9-437d-9833-2a35f1098fa2"
 location         = "eastus"
 brand            = "az"
 application      = "avm"
-environment      = "test"
+environment      = "prod"
 enable_telemetry = false
 
 user_assigned_managed_identities = {
