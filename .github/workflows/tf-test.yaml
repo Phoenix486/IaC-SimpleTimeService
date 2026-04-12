@@ -41,7 +41,7 @@ jobs:
 
       # Run kics scan
       - name: KICS Github Action
-        uses: Checkmarx/kics-github-action@05aa5eb70eede1355220f4ca5238d96b397e30a6
+        uses: Checkmarx/kics-github-action@d1b692d84c536f4e8696954ce7aab6818f95f5bc
         with:
           path: .
           output: 'json,sarif'
