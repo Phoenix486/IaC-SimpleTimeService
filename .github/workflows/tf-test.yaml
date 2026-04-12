@@ -39,8 +39,16 @@ jobs:
         if: success() || failure()
         run: terraform validate -no-color
 
-      - name: Security Scan with Policy
-        uses: JashwanthMU/TerraSecure@0acb8549565b6b8dd09db06abb60656a84079de9
+      # Run kics scan
+      - name: KICS Github Action
+        uses: Checkmarx/kics-github-action@v2.1.20
         with:
-          format: 'sarif'
-          fail-on: 'high'
+          path: .
+          output_formats: json,sarif
+          platform_type: terraform
+          output_path: results-dir
+          ignore_on_exit: results
+          exclude_paths: .terraform
+          token: ${{ secrets.GITHUB_TOKEN }}
+          enable_comments: true
+          enable_annotations: true
