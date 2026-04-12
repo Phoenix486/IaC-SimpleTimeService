@@ -44,4 +44,3 @@ jobs:
         with:
           format: 'sarif'
           fail-on: 'high'
-          upload-sarif: 'true'
