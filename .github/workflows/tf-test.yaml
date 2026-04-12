@@ -39,11 +39,9 @@ jobs:
         if: success() || failure()
         run: terraform validate -no-color
 
-      # Run tfsec scan
-      - name: tfsec action
-        uses: aquasecurity/tfsec-action@v1.0.3
+      - name: Security Scan with Policy
+        uses: JashwanthMU/TerraSecure@0acb8549565b6b8dd09db06abb60656a84079de9
         with:
-          working_directory: .
-          format: sarif
-          soft_fail: false
-          github_token: ${{ secrets.IAC_PAT_SECRET }}
+          format: 'sarif'
+          fail-on: 'high'
+          upload-sarif: 'true'
