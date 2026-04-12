@@ -1,0 +1,85 @@
+name: "Terraform Plan"
+
+on:
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-plan:
+    name: 'Terraform Plan'
+    runs-on: ubuntu-latest
+    environment:
+      name: 'Production'
+    defaults:
+        run:
+          shell: bash
+          working-directory: ./
+    env:
+      ARM_SKIP_PROVIDER_REGISTRATION: true
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v6.0.2
+
+    # Install the latest version of the Terraform CLI
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@633666f66e0061ca3b725c73b2ec20cd13a8fdd1
+      with:
+        terraform_wrapper: false
+
+    - name: 'Az CLI login'
+      uses: azure/login@v2.0.0
+      with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      env:
+        ARM_USE_OIDC: true
+      run: terraform init -backend-config="./backend.json"
+
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      id: tf-plan
+      run: |
+        terraform plan -no-color  -out tfplan
+
+    # Create text file with Terraform Plan
+    - name: Create text plan
+      run: |
+        terraform show -no-color tfplan >> tfplan.txt
+
+    # Save plan to artifacts  
+    - name: Publish Terraform Plan
+      uses: actions/upload-artifact@v7.0.1
+      id: upload-text-plan
+      with:
+        name: tfplan
+        path: ./tfplan.txt
+        overwrite: true
+        retention-days: 9
+
+    # If this is a PR post the changes
+    - name: Push Terraform Output to PR Comment
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.IAC_PAT_SECRET }}
+        script: |
+          const body = `Terraform plan URL: ${{ steps.upload-text-plan.outputs.artifact-url }}`;
+          github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+          })

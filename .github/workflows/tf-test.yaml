@@ -1,0 +1,57 @@
+name: "Terraform Test"
+
+on:
+  pull_request:
+    branches:
+      - '*'
+
+
+#Special permissions required for OIDC authentication
+permissions:
+  security-events: write # Needed to upload-sarif
+  contents: read # Needed to clone repo
+  actions: read # Potentially needed for private repositories (see https://github.com/github/codeql-action/issues/2117)
+
+jobs: 
+  check-code:
+    runs-on: ubuntu-latest
+    defaults:
+        run:
+          shell: bash
+          working-directory: ./
+    steps:
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: HashiCorp - Setup Terraform
+        uses: hashicorp/setup-terraform@v2.0.3
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -backend=false
+
+      # Run a terraform fmt to check syntax
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+
+      # Run a terraform validate
+      - name: Terraform Validate
+        id: validate
+        # Run even if formatting fails
+        if: success() || failure()
+        run: terraform validate -no-color
+
+      # Run kics scan
+      - name: KICS Github Action
+        uses: Checkmarx/kics-github-action@v2.0.0
+        with:
+          path: .
+          output: 'json,sarif'
+          platform_type: terraform
+          output-path: results-dir
+          ignore_on_exit: results
+          log-level: info
+          token: ${{ secrets.IAC_PAT_SECRET }}
+          enable_comments: true
