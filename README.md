@@ -41,7 +41,7 @@ az account show
 ### Step 2: Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR-ORG/IaC-SimpleTimeService.git
+git clone https://github.com/Phoenix486/IaC-SimpleTimeService.git
 cd IaC-SimpleTimeService
 ```
 

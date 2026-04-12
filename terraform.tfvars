@@ -1,7 +1,7 @@
 subscription_id  = "66e1fc04-0db9-437d-9833-2a35f1098fa2"
 location         = "eastus"
-brand            = "az"
-application      = "avm"
+brand            = "avm"
+application      = "sts"
 environment      = "prod"
 enable_telemetry = false
 
