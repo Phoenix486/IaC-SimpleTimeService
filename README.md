@@ -1,53 +1,70 @@
 # IaC-SimpleTimeService
 
-Infrastructure-as-Code deployment for SimpleTimeService using Terraform and Azure.
+Terraform deployment for AKS infrastructure with networking, container registry, and monitoring.
 
-> 📌 **Note**: Application deployment is handled via GitOps. This repository focuses on infrastructure provisioning only.
+## 🏗️ Infrastructure
 
-## 🎯 Purpose
-
-Deploy AKS infrastructure with:
-- VNet with public/private subnets
-- AKS cluster in private subnet
-- Application Gateway in public subnet
-- ACR, Key Vault, Azure Monitor
+- **Networking**: VNet with public/private subnets
+- **Compute**: AKS cluster in private subnets
+- **Ingress**: Application Gateway in public subnet
+- **Registry**: Azure Container Registry (ACR)
+- **Security**: Key Vault, Managed Identities
+- **Monitoring**: Azure Monitor
 
 ## 📋 Prerequisites
 
-- **Terraform** (>= 1.5.0) - [Install](https://www.terraform.io/downloads)
-- **Azure CLI** - [Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
-- **Git** - [Install](https://git-scm.com/downloads)
-- Active Azure subscription with Contributor role
+- **Terraform** >= 1.5.0 — [Install](https://www.terraform.io/downloads)
+- **Azure CLI** — [Install](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+- **Azure subscription** with Contributor role
 
-## 🚀 Local Deployment
-
-### Step 1: Prerequisites Check
+## 🚀 Deploy
 
 ```bash
-# Verify Terraform installation
-terraform version
-
-# Verify Azure CLI installation
-az version
-
-# Authenticate with Azure
+# 1. Authenticate
 az login
 az account set --subscription <your-subscription-id>
 
-# Verify credentials
-az account show
+# 2. Configure
+# Edit terraform.tfvars with your subscription ID
+subscription_id = "<your-azure-subscription-id>"
+
+# Get your subscription ID:
+az account show --query id --output tsv
+
+# 3. Deploy
+terraform init
+terraform plan
+terraform apply
 ```
 
-### Step 2: Clone the Repository
+⏱️ **Deployment time**: 15-30 minutes (AKS cluster creation is the longest)
 
-```bash
-git clone https://github.com/Phoenix486/IaC-SimpleTimeService.git
-cd IaC-SimpleTimeService
+## 📁 File Structure
+
+```
+IaC-SimpleTimeService/
+├── main*.tf              # Resource definitions (network, AKS, ACR, etc.)
+├── variables*.tf         # Variable definitions
+├── data.tf              # Data sources
+├── locals.tf            # Local variables
+├── outputs.tf           # Output values
+├── terraform.tf         # Terraform version & provider config
+├── backend.tf           # State backend
+├── backend.json         # Backend config
+├── terraform.tfvars     # Your configuration (edit this)
+└── terraform.*auto.tfvars  # Default values
 ```
 
-### Step 3: Configure Azure Subscription
+## ⚠️ Important Notes
 
-Edit `terraform.tfvars` and update the subscription ID:
+- **Credentials**: Never commit credentials to Git. Use `az login` for auth.
+- **State File**: Remove `.tfstate*` files if pushing to Git
+- **Cleanup**: Run `terraform destroy` to avoid charges
+- **Cost**: AKS and other resources incur Azure costs
+
+## 🔄 (Optional) CI/CD with GitHub Actions
+
+To automate deployments, set up Azure federated credentials and GitHub secrets. See `.github/workflows/` for example workflows.
 
 ```hcl
 subscription_id = "<your-azure-subscription-id>"
@@ -217,6 +234,59 @@ terraform destroy
 - [Terraform Docs](https://www.terraform.io/docs)
 - [Azure Terraform Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
 - [AKS Best Practices](https://learn.microsoft.com/en-us/azure/aks/best-practices)
+
+## ⚠️ Known Issues
+
+### 1. KICS Security Scan Stuck
+The `tf-test.yaml` GitHub Actions workflow may hang during KICS scanning. This is a known issue with the KICS tool on large Terraform projects. 
+
+**Workaround**: Manually skip KICS in the workflow or increase the timeout threshold.
+
+### 2. API Server Subnet Delegation Changes Fail
+Terraform plan shows NSG rule changes for API server subnet delegation, but `terraform apply` fails because Azure doesn't allow removing these delegations after creation.
+
+**Workaround**: These changes are safe to ignore. They exist by design and cannot be modified or removed from Terraform. To avoid the error, manually set `lifecycle { ignore_changes = [delegation] }` on the subnet resource or apply with `-auto-approve` after reviewing the changes.
+
+### 3. AGIC Ingress UAMI Role Assignments Not in Terraform
+The Application Gateway Ingress Controller (AGIC) is deployed as an AKS addon, which auto-creates a managed identity. The role assignments for this identity must currently be added manually to Azure via the portal or Azure CLI, as they are not managed by this Terraform configuration.
+
+**Workaround**: After deployment, manually assign these roles to the auto-created AGIC identity:
+```bash
+# Get AGIC identity object ID
+AGIC_PRINCIPAL_ID=$(az identity show \
+  --resource-group <node-resource-group> \
+  --name <agic-identity-name> \
+  --query principalId -o tsv)
+
+# Assign Contributor on Application Gateway
+az role assignment create \
+  --role Contributor \
+  --assignee-object-id $AGIC_PRINCIPAL_ID \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg-name>/providers/Microsoft.Network/applicationGateways/<agw-name>
+
+# Assign Reader on resource group
+az role assignment create \
+  --role Reader \
+  --assignee-object-id $AGIC_PRINCIPAL_ID \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg-name>
+```
+
+**Future Enhancement**: Move AGIC to manual deployment via Helm and integrate with AKS managed identity to avoid this manual step.
+
+### 4. Application Gateway SSL Certificate Removed on Re-apply
+SSL certificates added manually to the Application Gateway are deleted during subsequent `terraform apply` runs because they are not managed in the Terraform configuration.
+
+**Workaround**: Add SSL certificates to `terraform.appgw.auto.tfvars` in the `agw_ssl_profile` section to manage them via Terraform, or use Azure Key Vault integration to automate certificate rotation.
+
+**Manual Process**: To add certificates temporarily:
+```bash
+az network application-gateway ssl-cert create \
+  --name <cert-name> \
+  --gateway-name <agw-name> \
+  --resource-group <rg-name> \
+  --cert-file <path-to-cert> \
+  --cert-password <password>
+```
 
 ---
 

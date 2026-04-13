@@ -6,7 +6,7 @@ terraform {
     }
     azapi = {
       source  = "azure/azapi"
-      version = "~> 2.0"
+      version = "=2.8.0"
     }
     http = {
       source  = "hashicorp/http"

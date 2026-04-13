@@ -26,21 +26,6 @@ locals {
       role_definition_name = "Managed Identity Operator"
       principal_id         = module.managed_identity["aks"].principal_id
     }
-    ingress_role_1 = {
-      scope                = module.resource_group.resource_id
-      role_definition_name = "Network Contributor"
-      principal_id         = module.managed_identity["aks"].principal_id
-    }
-    ingress_role_2 = {
-      scope                = module.resource_group.resource_id
-      role_definition_name = "Managed Identity Operator"
-      principal_id         = module.managed_identity["aks"].principal_id
-    }
-    ingress_role_3 = {
-      scope                = module.resource_group.resource_id
-      role_definition_name = "Reader"
-      principal_id         = module.managed_identity["aks"].principal_id
-    }
   }
   role_assignments_for_subscriptions              = {}
   role_assignments_for_resource_groups            = {}
