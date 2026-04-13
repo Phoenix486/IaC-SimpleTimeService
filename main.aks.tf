@@ -22,6 +22,12 @@ locals {
     vnet_subnet_id = var.aks_default_agent_pool.vnet_subnet_id != null ? var.aks_default_agent_pool.vnet_subnet_id : (var.aks_default_agent_pool.vnet_subnet_key != null ? module.virtual_network.subnets[var.aks_default_agent_pool.vnet_subnet_key].resource_id : null)
   })
 
+  aks_identity_profile = {
+    kubeletidentity = {
+      resource_id = module.managed_identity["aks"].resource_id
+    }
+  }
+
   aks_managed_identities = var.aks_managed_identities.system_assigned ? {
     system_assigned            = true
     user_assigned_resource_ids = []
@@ -57,6 +63,7 @@ module "azure_kubernetes_service" {
   default_agent_pool                        = local.aks_default_agent_pool
   disable_local_accounts                    = var.aks_disable_local_accounts
   fqdn_subdomain                            = local.aks_name
+  identity_profile                          = local.aks_identity_profile
   managed_identities                        = local.aks_managed_identities
   network_profile                           = var.aks_network_profile
   addon_profile_ingress_application_gateway = local.aks_addon_profile_ingress_application_gateway
