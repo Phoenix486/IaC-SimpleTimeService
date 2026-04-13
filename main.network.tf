@@ -53,6 +53,7 @@ locals {
 # This module creates a virtual network in Azure with the specified address space and subnets.
 module "virtual_network" {
   source               = "Azure/avm-res-network-virtualnetwork/azurerm"
+  version              = "0.17.0"
   name                 = local.virtual_network_name
   parent_id            = local.resource_group_id
   location             = local.location
