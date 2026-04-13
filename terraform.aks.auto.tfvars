@@ -16,23 +16,27 @@ aks_managed_identities = {
 
 aks_default_agent_pool = {
   name                = "default"
-  vm_size             = "Standard_EC8ads_v5"
+  vm_size             = "Standard_EC4ads_v5"
   enable_auto_scaling = true
   max_count           = 4
   min_count           = 2
   vnet_subnet_key     = "aks_node_subnet"
   node_taints         = ["CriticalAddonsOnly=true:NoSchedule"]
+  os_disk_size_gb     = 128
+  os_disk_type        = "Managed"
 }
 
 aks_agent_pools = {
   workload = {
     name                = "workload"
-    vm_size             = "Standard_EC8ads_v5"
+    vm_size             = "Standard_EC4ads_v5"
     mode                = "User"
     enable_auto_scaling = true
     max_count           = 4
     min_count           = 2
     vnet_subnet_key     = "aks_workload_subnet"
+    os_disk_size_gb     = 128
+    os_disk_type        = "Managed"
   }
 }
 
